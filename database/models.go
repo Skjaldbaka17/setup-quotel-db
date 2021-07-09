@@ -29,5 +29,14 @@ type Quote struct {
 	Quote       string
 	Count       int `gorm:"index"`
 	IsIcelandic bool
-	QuoteTSV    string `gorm:"type:tsvector"`
+	QuoteTSV    string  `gorm:"type:tsvector"`
+	Topics      []Topic `gorm:"many2many:topics_quotes;"`
+}
+
+type Topic struct {
+	gorm.Model
+	Name        string
+	IsIcelandic bool
+	Count       int
+	Quotes      []Quote `gorm:"many2many:topics_quotes;"`
 }

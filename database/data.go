@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"math"
 	"os"
 	"sort"
 	"strings"
@@ -13,6 +14,16 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
+
+type TopicJSON struct {
+	Topic  string
+	Quotes []QuotesJSON
+}
+
+type QuotesJSON struct {
+	Quote  string
+	Author string
+}
 
 type AuthorJSON struct {
 	Metadata Metadata `json:"metadata"`
@@ -45,27 +56,70 @@ var errCount = 0
 
 func (connection *Connection) InsertTopics(language string) {
 	var wg sync.WaitGroup
-	var useAlpha string
-	BASE_PATH := "../Quotel-Data-JSON/Authors/Authors-combined/"
+	BASE_PATH := "../Quotel-Data-JSON/Topics/Topics-combined/"
 	path := BASE_PATH
 	isIcelandic := false
 
 	if strings.ToLower(language) == "icelandic" {
 		path += "Icelandic/"
-		useAlpha = icelandicAlphabet
 		isIcelandic = true
 	} else {
 		path += "English/"
-		useAlpha = alphabet
 	}
 
-	for _, letter := range useAlpha {
+	info, _ := ReadDir(path)
+	for _, name := range info {
+		topicJSON, _ := GetTopicJSON(fmt.Sprintf("%s/%s", path, name.Name()))
 		wg.Add(1)
-		go connection.InsertAuthorsForLetter(isIcelandic, strings.ToUpper(string(letter)), path, &wg)
+		go connection.InsertTopic(topicJSON, isIcelandic, &wg)
 	}
 	wg.Wait()
-	log.Println(count)
-	log.Println(errCount)
+}
+
+func (connection *Connection) InsertTopic(topicJSON TopicJSON, isIcelandic bool, wg *sync.WaitGroup) {
+	defer wg.Done()
+	log.Printf("Creating topic %s, nr of quotes %d", topicJSON.Topic, len(topicJSON.Quotes))
+	topic := Topic{
+		Name:   topicJSON.Topic,
+		Quotes: []Quote{},
+	}
+
+	tenPercent := math.Floor(float64(len(topicJSON.Quotes)) * 0.1)
+	for idx, quote := range topicJSON.Quotes {
+		quoteFromDB := connection.GetQuote(quote.Quote)
+		topicQuote := Quote{
+			AuthorID:    quoteFromDB.AuthorID,
+			Quote:       quote.Quote,
+			IsIcelandic: isIcelandic,
+		}
+		topicQuote.ID = quoteFromDB.ID
+		topic.Quotes = append(topic.Quotes, topicQuote)
+
+		if idx%int(tenPercent) == 0 {
+			log.Printf("%s, %.f%%", topicJSON.Topic, 100*float64(idx)/float64(len(topicJSON.Quotes)))
+		}
+	}
+
+	err := connection.DB.
+		Create(&topic).Error
+
+	if err != nil {
+		log.Printf("GOT ERROR IN CREATING TOPIC: %s", err)
+	}
+
+	log.Printf("Topic %s created", topicJSON.Topic)
+}
+
+func (connection *Connection) GetQuote(quoteString string) Quote {
+	var quote Quote
+	connection.DB.Where("quote = ?", quoteString).First(&quote)
+	return quote
+}
+
+func (connection *Connection) GetAuthor(name string) Author {
+	var author Author
+	connection.DB.Where("name = ?", name).First(&author)
+	return author
 }
 
 func (connection *Connection) InsertAuthors(language string) {
@@ -100,7 +154,7 @@ func (connection *Connection) InsertAuthorsForLetter(isIcelandic bool, letter st
 	log.Printf("Starting on: %s\n", path+letter)
 	for _, name := range info {
 
-		authorJSON, _ := GetJSON(fmt.Sprintf("%s/%s/%s", path, letter, name.Name()))
+		authorJSON, _ := GetAuthorJSON(fmt.Sprintf("%s/%s/%s", path, letter, name.Name()))
 		author := Author{
 			Nationality: authorJSON.Metadata.Nationality,
 			Profession:  authorJSON.Metadata.Profession,
@@ -168,7 +222,28 @@ func (connection *Connection) InsertAuthor(author Author, isIcelandic bool) {
 	}
 }
 
-func GetJSON(path string) (AuthorJSON, error) {
+func GetTopicJSON(path string) (TopicJSON, error) {
+	// Open JSON
+	jsonFile, err := os.Open(path)
+	// if os.Open returns an error then handle it
+	if err != nil {
+		log.Println("ERROR OPENING", path)
+		return TopicJSON{}, err
+	}
+
+	// defer the closing of our jsonFile so that we can parse it later on
+	defer jsonFile.Close()
+
+	//Read the opened file
+	byteValue, _ := ioutil.ReadAll(jsonFile)
+
+	var topic TopicJSON
+	//Convert the read value to json and put into the topic-var
+	json.Unmarshal(byteValue, &topic)
+	return topic, nil
+}
+
+func GetAuthorJSON(path string) (AuthorJSON, error) {
 	// Open JSON
 	jsonFile, err := os.Open(path)
 	// if os.Open returns an error then handle it
