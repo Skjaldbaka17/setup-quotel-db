@@ -11,5 +11,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("got error %s", err)
 	}
-	connection.GetAuthors("english")
+	// connection.InsertAuthors("english")
+	// connection.InsertAuthors("icelandic")
+	connection.InsertTopics("english")
 }
