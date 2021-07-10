@@ -68,11 +68,25 @@ func (connection *Connection) InsertTopics(language string) {
 	}
 
 	info, _ := ReadDir(path)
-	for _, name := range info {
+	log.Println(len(info), isIcelandic)
+	for idx, name := range info {
+
 		topicJSON, _ := GetTopicJSON(fmt.Sprintf("%s/%s", path, name.Name()))
 		wg.Add(1)
 		go connection.InsertTopic(topicJSON, isIcelandic, &wg)
+		if idx != 0 && idx%95 == 0 { //Because if more than 100 (?) request for DB then it throws error: failed to connect to `host=localhost user=thorduragustsson database=all_quotes_new`: server error (FATAL: sorry, too many clients already
+			wg.Wait()
+		}
 	}
+	// for i := 96; i < len(info); i++ {
+	// 	name := info[i]
+	// 	topicJSON, _ := GetTopicJSON(fmt.Sprintf("%s/%s", path, name.Name()))
+	// 	wg.Add(1)
+	// 	go connection.InsertTopic(topicJSON, isIcelandic, &wg)
+	// 	// if idx == 95 { //Because if more than 100 (?) request for DB then it throws error: failed to connect to `host=localhost user=thorduragustsson database=all_quotes_new`: server error (FATAL: sorry, too many clients already
+	// 	// 	wg.Wait()
+	// 	// }
+	// }
 	wg.Wait()
 }
 
@@ -80,13 +94,28 @@ func (connection *Connection) InsertTopic(topicJSON TopicJSON, isIcelandic bool,
 	defer wg.Done()
 	log.Printf("Creating topic %s, nr of quotes %d", topicJSON.Topic, len(topicJSON.Quotes))
 	topic := Topic{
-		Name:   topicJSON.Topic,
-		Quotes: []Quote{},
+		Name:        topicJSON.Topic,
+		Quotes:      []Quote{},
+		IsIcelandic: isIcelandic,
 	}
 
 	tenPercent := math.Floor(float64(len(topicJSON.Quotes)) * 0.1)
 	for idx, quote := range topicJSON.Quotes {
 		quoteFromDB := connection.GetQuote(quote.Quote)
+		if quoteFromDB.ID == 0 {
+			log.Println("HERE", quote.Quote, quote.Author)
+			author := Author{
+				Name: quote.Author,
+				Quotes: []Quote{
+					{
+						Quote:       quote.Quote,
+						IsIcelandic: true,
+					},
+				},
+			}
+			connection.InsertAuthor(author, isIcelandic)
+			quoteFromDB = connection.GetQuote(quote.Quote)
+		}
 		topicQuote := Quote{
 			AuthorID:    quoteFromDB.AuthorID,
 			Quote:       quote.Quote,

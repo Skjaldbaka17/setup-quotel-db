@@ -18,16 +18,16 @@ type Author struct {
 	Name                string `gorm:"unique"`
 	NameTSV             string `gorm:"type:tsvector"`
 	Quotes              []Quote
-	Count               int `gorm:"index"`
+	Count               int `gorm:"index,default 0"`
 	NrOfEnglishQuotes   int `gorm:"index"`
 	NrOfIcelandicQuotes int `gorm:"index"`
 }
 
 type Quote struct {
 	gorm.Model
-	AuthorID    uint `gorm:"index"`
-	Quote       string
-	Count       int `gorm:"index"`
+	AuthorID    uint   `gorm:"index"`
+	Quote       string `gorm:"index"` //indexed for when inserting the the topics!
+	Count       int    `gorm:"index,default 0"`
 	IsIcelandic bool
 	QuoteTSV    string  `gorm:"type:tsvector"`
 	Topics      []Topic `gorm:"many2many:topics_quotes;"`
@@ -35,8 +35,8 @@ type Quote struct {
 
 type Topic struct {
 	gorm.Model
-	Name        string
+	Name        string `gorm:"unique"`
 	IsIcelandic bool
-	Count       int
+	Count       int     `gorm:"default 0"`
 	Quotes      []Quote `gorm:"many2many:topics_quotes;"`
 }

@@ -13,5 +13,5 @@ func main() {
 	}
 	// connection.InsertAuthors("english")
 	// connection.InsertAuthors("icelandic")
-	connection.InsertTopics("english")
+	connection.InsertTopics("icelandic")
 }
