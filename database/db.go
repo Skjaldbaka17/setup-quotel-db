@@ -24,7 +24,7 @@ func InitializeDBConnection() (*Connection, error) {
 		return &Connection{}, err
 	}
 	// Auto Migrate
-	err = db.AutoMigrate(&Author{}, &Quote{}, &Topic{})
+	err = db.AutoMigrate(&Author{}, &Aod{}, &Aodice{}, &Quote{}, &Qod{}, &Qodice{}, &Topic{})
 	if err != nil {
 		log.Fatalf("ERROR: %s", err)
 	}

@@ -1,6 +1,7 @@
 package database
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -48,11 +49,83 @@ type Day struct {
 	Year  int
 }
 
-const alphabet = "abcdefghijklmnopqrstuvwxyz"
+const alphabet = "1abcdefghijklmnopqrstuvwxyz"
 const icelandicAlphabet = "aáæbcdðeéfghiíjklmnoóöpqrstuúvwxyýzþ"
 
 var count = 0
 var errCount = 0
+
+func ReadTextFile(path string) string {
+	dat, err := ioutil.ReadFile(path)
+	if err != nil {
+		panic(err)
+	}
+	return string(dat)
+}
+
+func (connection *Connection) WrapItUp() {
+	var wg sync.WaitGroup
+
+	var err error
+
+	log.Println("Running: drop materialized view if exists topicsview, unique_lexeme_authors, unique_lexeme_quotes, unique_lexeme;")
+	err = connection.DB.Exec("drop materialized view if exists topicsview, unique_lexeme_authors, unique_lexeme_quotes, unique_lexeme;").Error
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Println("Creating topicsView...")
+	file := ReadTextFile("./sql/views/topicsView.sql")
+	err = connection.DB.Exec(file).Error
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Println("Creating uniqueLexemeAuthorsView...")
+	file = ReadTextFile("./sql/views/uniqueLexemeAuthorsView.sql")
+	err = connection.DB.Exec(file).Error
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Println("Creating uniqueLexemeQuotesView...")
+	file = ReadTextFile("./sql/views/uniqueLexemeQuotesView.sql")
+	err = connection.DB.Exec(file).Error
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Println("Creating uniqueLexemeView...")
+	file = ReadTextFile("./sql/views/uniqueLexemeView.sql")
+	err = connection.DB.Exec(file).Error
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println("Running final queries / Creating indexes ...")
+
+	wrapUpFile := ReadTextFile("./sql/wrapUpQueries.sql")
+	scanner := bufio.NewScanner(strings.NewReader(wrapUpFile))
+
+	for scanner.Scan() {
+		query := scanner.Text()
+		if query == "" {
+			continue
+		}
+		wg.Add(1)
+		go func(query string) {
+			log.Println("Running: ", query)
+			defer wg.Done()
+			err = connection.DB.Exec(query).Error
+			if err != nil {
+				log.Printf("Reading JSON file Failed, %s", err)
+			}
+
+		}(query)
+	}
+
+	wg.Wait()
+}
 
 func (connection *Connection) InsertTopics(language string) {
 	var wg sync.WaitGroup
@@ -74,7 +147,7 @@ func (connection *Connection) InsertTopics(language string) {
 		topicJSON, _ := GetTopicJSON(fmt.Sprintf("%s/%s", path, name.Name()))
 		wg.Add(1)
 		go connection.InsertTopic(topicJSON, isIcelandic, &wg)
-		if idx != 0 && idx%95 == 0 { //Because if more than 100 (?) request for DB then it throws error: failed to connect to `host=localhost user=thorduragustsson database=all_quotes_new`: server error (FATAL: sorry, too many clients already
+		if idx != 0 && idx%30 == 0 { //Because if more than 100 (?) request for DB then it throws error: failed to connect to `host=localhost user=thorduragustsson database=all_quotes_new`: server error (FATAL: sorry, too many clients already
 			wg.Wait()
 		}
 	}
@@ -207,6 +280,15 @@ func (connection *Connection) InsertAuthorsForLetter(isIcelandic bool, letter st
 			quotes = append(quotes, Quote{
 				Quote:       quote,
 				IsIcelandic: isIcelandic,
+				Nationality: authorJSON.Metadata.Nationality,
+				Profession:  authorJSON.Metadata.Profession,
+				Name:        authorJSON.Name,
+				BirthYear:   authorJSON.Metadata.Days.Birth.Year,
+				BirthMonth:  authorJSON.Metadata.Days.Birth.Month,
+				BirthDate:   authorJSON.Metadata.Days.Birth.Day,
+				DeathYear:   authorJSON.Metadata.Days.Death.Year,
+				DeathMonth:  authorJSON.Metadata.Days.Death.Month,
+				DeathDate:   authorJSON.Metadata.Days.Death.Day,
 			})
 		}
 		author.Quotes = quotes
