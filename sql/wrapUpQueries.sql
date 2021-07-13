@@ -1,7 +1,11 @@
 CREATE EXTENSION if not exists pg_trgm;
 
 UPDATE authors SET name_tsv = setweight(to_tsvector('english', name), 'A');
-CREATE INDEX if not exists index_authors_on_name ON authors USING gin(name_tsv);
+UPDATE quotes SET quote_tsv = setweight(to_tsvector('english', quote), 'B');
+UPDATE quotes SET tsv = setweight(to_tsvector('english', quote), 'B') || setweight(to_tsvector('english', name), 'A');
+
+CREATE INDEX if not exists index_authors_on_name_tsv ON authors USING gin(name_tsv);
+CREATE INDEX if not exists index_authors_on_name ON authors(name);
 CREATE INDEX if not exists index_authors_on_count ON authors(count);
 CREATE INDEX if not exists index_authors_on_profession ON authors(profession);
 CREATE INDEX if not exists index_authors_on_nationality ON authors(nationality);
@@ -16,10 +20,9 @@ CREATE INDEX if not exists index_authors_on_death_date ON authors(death_date);
 CREATE INDEX if not exists index_aods_on_date ON aods(date);
 CREATE INDEX if not exists index_aodices_on_date ON aodices(date);
 
-UPDATE quotes SET quote_tsv = setweight(to_tsvector('english', quote), 'B');
-UPDATE quotes SET tsv = setweight(to_tsvector('english', quote), 'B') || setweight(to_tsvector('english', name), 'A');
 CREATE INDEX if not exists index_quotes_on_tsv ON quotes USING gin(tsv);
-CREATE INDEX if not exists index_quotes_on_quote ON quotes USING gin(quote_tsv);
+CREATE INDEX if not exists index_quotes_on_quote_tsv ON quotes USING gin(quote_tsv);
+CREATE INDEX if not exists index_quotes_on_quote ON quotes(quote);
 CREATE INDEX if not exists index_quotes_on_author_id ON quotes(author_id);
 CREATE INDEX if not exists index_quotes_on_count ON quotes(count);
 

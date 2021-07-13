@@ -23,6 +23,8 @@ type Author struct {
 	Count               int `gorm:"default 0"`
 	NrOfEnglishQuotes   int
 	NrOfIcelandicQuotes int
+	Aods                []Aod
+	Aodices             []Aodice
 }
 
 type Aod struct {
@@ -37,6 +39,7 @@ type Aod struct {
 	DeathDate   int
 	Name        string
 	Date        time.Time `gorm:"unique"`
+	AuthorID    uint
 }
 
 type Aodice struct {
@@ -51,6 +54,7 @@ type Aodice struct {
 	DeathDate   int
 	Name        string
 	Date        time.Time `gorm:"unique"`
+	AuthorID    uint
 }
 
 type Quote struct {

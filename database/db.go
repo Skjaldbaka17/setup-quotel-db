@@ -18,7 +18,7 @@ type Connection struct {
 func InitializeDBConnection() (*Connection, error) {
 	godotenv.Load()
 	db, err := gorm.Open(postgres.Open(os.Getenv("DATABASE_URL")), &gorm.Config{
-		Logger: logger.Default.LogMode(logger.Error),
+		Logger: logger.Default.LogMode(logger.Silent),
 	})
 	if err != nil {
 		return &Connection{}, err

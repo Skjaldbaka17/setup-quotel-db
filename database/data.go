@@ -120,7 +120,7 @@ func (connection *Connection) WrapItUp() {
 			if err != nil {
 				log.Printf("Reading JSON file Failed, %s", err)
 			}
-
+			log.Println("Done With: ", query)
 		}(query)
 	}
 
@@ -147,7 +147,7 @@ func (connection *Connection) InsertTopics(language string) {
 		topicJSON, _ := GetTopicJSON(fmt.Sprintf("%s/%s", path, name.Name()))
 		wg.Add(1)
 		go connection.InsertTopic(topicJSON, isIcelandic, &wg)
-		if idx != 0 && idx%30 == 0 { //Because if more than 100 (?) request for DB then it throws error: failed to connect to `host=localhost user=thorduragustsson database=all_quotes_new`: server error (FATAL: sorry, too many clients already
+		if idx != 0 && idx%65 == 0 { //Because if more than 100 (?) request for DB then it throws error: failed to connect to `host=localhost user=thorduragustsson database=all_quotes_new`: server error (FATAL: sorry, too many clients already
 			wg.Wait()
 		}
 	}
@@ -183,6 +183,7 @@ func (connection *Connection) InsertTopic(topicJSON TopicJSON, isIcelandic bool,
 					{
 						Quote:       quote.Quote,
 						IsIcelandic: true,
+						Name:        quote.Author,
 					},
 				},
 			}
@@ -193,6 +194,7 @@ func (connection *Connection) InsertTopic(topicJSON TopicJSON, isIcelandic bool,
 			AuthorID:    quoteFromDB.AuthorID,
 			Quote:       quote.Quote,
 			IsIcelandic: isIcelandic,
+			Name:        quote.Author,
 		}
 		topicQuote.ID = quoteFromDB.ID
 		topic.Quotes = append(topic.Quotes, topicQuote)
