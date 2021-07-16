@@ -14,9 +14,11 @@ type Author struct {
 	BirthYear           int
 	BirthMonth          string
 	BirthDate           int
+	BirthDay            time.Time
 	DeathYear           int
 	DeathMonth          string
 	DeathDate           int
+	DeathDay            time.Time
 	Name                string `gorm:"unique"`
 	NameTSV             string `gorm:"type:tsvector"`
 	Quotes              []Quote
@@ -34,9 +36,11 @@ type Aod struct {
 	BirthYear   int
 	BirthMonth  string
 	BirthDate   int
+	BirthDay    time.Time
 	DeathYear   int
 	DeathMonth  string
 	DeathDate   int
+	DeathDay    time.Time
 	Name        string
 	Date        time.Time `gorm:"unique"`
 	AuthorID    uint
@@ -49,9 +53,11 @@ type Aodice struct {
 	BirthYear   int
 	BirthMonth  string
 	BirthDate   int
+	BirthDay    time.Time
 	DeathYear   int
 	DeathMonth  string
 	DeathDate   int
+	DeathDay    time.Time
 	Name        string
 	Date        time.Time `gorm:"unique"`
 	AuthorID    uint
@@ -73,9 +79,11 @@ type Quote struct {
 	BirthYear   int
 	BirthMonth  string
 	BirthDate   int
+	BirthDay    time.Time
 	DeathYear   int
 	DeathMonth  string
 	DeathDate   int
+	DeathDay    time.Time
 }
 
 type Qod struct {
@@ -90,9 +98,11 @@ type Qod struct {
 	BirthYear   int
 	BirthMonth  string
 	BirthDate   int
+	BirthDay    time.Time
 	DeathYear   int
 	DeathMonth  string
 	DeathDate   int
+	DeathDay    time.Time
 	Date        time.Time `gorm:"unique"`
 }
 
@@ -108,9 +118,11 @@ type Qodice struct {
 	BirthYear   int
 	BirthMonth  string
 	BirthDate   int
+	BirthDay    time.Time
 	DeathYear   int
 	DeathMonth  string
 	DeathDate   int
+	DeathDay    time.Time
 	Date        time.Time `gorm:"unique"`
 }
 

@@ -10,12 +10,15 @@ CREATE INDEX if not exists index_authors_on_count ON authors(count);
 CREATE INDEX if not exists index_authors_on_profession ON authors(profession);
 CREATE INDEX if not exists index_authors_on_nationality ON authors(nationality);
 CREATE INDEX if not exists index_authors_on_nr_of_english_quotes ON authors(nr_of_english_quotes);
+CREATE INDEX if not exists index_authors_on_nr_of_icelandic_quotes ON authors(nr_of_icelandic_quotes);
 CREATE INDEX if not exists index_authors_on_birth_year ON authors(birth_year);
 CREATE INDEX if not exists index_authors_on_birth_month ON authors(birth_month);
 CREATE INDEX if not exists index_authors_on_birth_date ON authors(birth_date);
 CREATE INDEX if not exists index_authors_on_death_year ON authors(death_year);
 CREATE INDEX if not exists index_authors_on_death_month ON authors(death_month);
 CREATE INDEX if not exists index_authors_on_death_date ON authors(death_date);
+CREATE INDEX if not exists index_authors_on_death_day ON authors(death_day);
+CREATE INDEX if not exists index_authors_on_birth_day ON authors(birth_day);
 
 CREATE INDEX if not exists index_aods_on_date ON aods(date);
 CREATE INDEX if not exists index_aodices_on_date ON aodices(date);

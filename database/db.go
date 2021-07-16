@@ -18,18 +18,20 @@ type Connection struct {
 func InitializeDBConnection() (*Connection, error) {
 	godotenv.Load()
 	db, err := gorm.Open(postgres.Open(os.Getenv("DATABASE_URL")), &gorm.Config{
-		Logger: logger.Default.LogMode(logger.Silent),
+		Logger: logger.Default.LogMode(logger.Error),
 	})
 	if err != nil {
 		return &Connection{}, err
 	}
+	connection := &Connection{
+		DB: db,
+	}
+	connection.GetShitReady()
 	// Auto Migrate
 	err = db.AutoMigrate(&Author{}, &Aod{}, &Aodice{}, &Quote{}, &Qod{}, &Qodice{}, &Topic{})
 	if err != nil {
 		log.Fatalf("ERROR: %s", err)
 	}
 
-	return &Connection{
-		DB: db,
-	}, nil
+	return connection, nil
 }

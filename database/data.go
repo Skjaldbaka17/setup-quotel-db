@@ -11,6 +11,7 @@ import (
 	"sort"
 	"strings"
 	"sync"
+	"time"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -61,6 +62,21 @@ func ReadTextFile(path string) string {
 		panic(err)
 	}
 	return string(dat)
+}
+
+func (connection *Connection) GetShitReady() {
+	log.Println("Executing: drop table if exists aodices, aods, qodices, qods, quotes, topics, topics_quotes, authors cascade")
+	err := connection.DB.Exec("drop table if exists aodices, aods, qodices, qods, quotes, topics, topics_quotes, authors cascade").Error
+	if err != nil {
+		log.Fatalf("got error when getting shit ready %s", err)
+	}
+
+	log.Println("Executing: drop materialized view if exists unique_lexeme, unique_lexeme_authors, unique_lexeme_quotes")
+
+	err = connection.DB.Exec("drop materialized view if exists unique_lexeme, unique_lexeme_authors, unique_lexeme_quotes").Error
+	if err != nil {
+		log.Fatalf("got error when getting shit ready, i.e. dropping mat-views, %s", err)
+	}
 }
 
 func (connection *Connection) WrapItUp() {
@@ -259,6 +275,31 @@ func (connection *Connection) InsertAuthorsForLetter(isIcelandic bool, letter st
 	for _, name := range info {
 
 		authorJSON, _ := GetAuthorJSON(fmt.Sprintf("%s/%s/%s", path, letter, name.Name()))
+		//Do it like this so that we don't save 'fake' months/days in the OG data
+		birthMonth := authorJSON.Metadata.Days.Birth.Month
+		deathMonth := authorJSON.Metadata.Days.Death.Month
+		if birthMonth == "" {
+			birthMonth = "December"
+		}
+		if deathMonth == "" {
+			deathMonth = "December"
+		}
+
+		birthDate := authorJSON.Metadata.Days.Birth.Day
+		deathDate := authorJSON.Metadata.Days.Death.Day
+		if birthDate == 0 {
+			birthDate = 31
+		}
+		if deathDate == 0 {
+			deathDate = 31
+		}
+		theBirthDay := fmt.Sprintf("%d-%s-%d 0:00PM", authorJSON.Metadata.Days.Birth.Year, birthMonth, birthDate)
+		theDeathDay := fmt.Sprintf("%d-%s-%d 0:00PM", authorJSON.Metadata.Days.Death.Year, deathMonth, deathDate)
+		birthDay, _ := time.Parse("2006-January-2 3:04PM", theBirthDay)
+		deathDay, _ := time.Parse("2006-January-2 3:04PM", theDeathDay)
+		if authorJSON.Name == "B. D. Wong" {
+			log.Println("WONG:", birthDay)
+		}
 		author := Author{
 			Nationality: authorJSON.Metadata.Nationality,
 			Profession:  authorJSON.Metadata.Profession,
@@ -266,6 +307,8 @@ func (connection *Connection) InsertAuthorsForLetter(isIcelandic bool, letter st
 			BirthYear:   authorJSON.Metadata.Days.Birth.Year,
 			BirthMonth:  authorJSON.Metadata.Days.Birth.Month,
 			BirthDate:   authorJSON.Metadata.Days.Birth.Day,
+			BirthDay:    birthDay.UTC(),
+			DeathDay:    deathDay.UTC(),
 			DeathYear:   authorJSON.Metadata.Days.Death.Year,
 			DeathMonth:  authorJSON.Metadata.Days.Death.Month,
 			DeathDate:   authorJSON.Metadata.Days.Death.Day,
@@ -288,9 +331,11 @@ func (connection *Connection) InsertAuthorsForLetter(isIcelandic bool, letter st
 				BirthYear:   authorJSON.Metadata.Days.Birth.Year,
 				BirthMonth:  authorJSON.Metadata.Days.Birth.Month,
 				BirthDate:   authorJSON.Metadata.Days.Birth.Day,
+				BirthDay:    birthDay.UTC(),
 				DeathYear:   authorJSON.Metadata.Days.Death.Year,
 				DeathMonth:  authorJSON.Metadata.Days.Death.Month,
 				DeathDate:   authorJSON.Metadata.Days.Death.Day,
+				DeathDay:    deathDay.UTC(),
 			})
 		}
 		author.Quotes = quotes
