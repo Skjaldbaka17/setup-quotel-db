@@ -32,15 +32,5 @@ CREATE INDEX if not exists index_quotes_on_count ON quotes(count);
 CREATE INDEX if not exists index_qods_on_date ON qods(date);
 CREATE INDEX if not exists index_qodices_on_date ON qodices(date);
 
-CREATE INDEX if not exists index_topics_view_on_name_tsv ON topicsView using gin(name_tsv);
-CREATE INDEX if not exists index_topics_view_on_quote_tsv ON topicsView using gin(quote_tsv);
-CREATE INDEX if not exists index_topics_view_on_tsv ON topicsView using gin(tsv);
-CREATE INDEX if not exists index_topics_view_on_author_id ON topicsView(author_id);
-CREATE INDEX if not exists index_topics_view_on_quote_id ON topicsView(quote_id);
-
-CREATE INDEX words_idx ON unique_lexeme USING gin(word gin_trgm_ops);
-CREATE INDEX words_idx_quotes ON unique_lexeme_quotes USING gin(word gin_trgm_ops);
-CREATE INDEX words_idx_authors ON unique_lexeme_authors USING gin(word gin_trgm_ops);
-
 
 

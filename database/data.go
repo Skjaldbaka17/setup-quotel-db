@@ -79,11 +79,10 @@ func (connection *Connection) GetShitReady() {
 	}
 }
 
-func (connection *Connection) WrapItUp() {
+func (connection *Connection) CreateMaterializedViews() {
 	var wg sync.WaitGroup
 
 	var err error
-
 	log.Println("Running: drop materialized view if exists topicsview, unique_lexeme_authors, unique_lexeme_quotes, unique_lexeme;")
 	err = connection.DB.Exec("drop materialized view if exists topicsview, unique_lexeme_authors, unique_lexeme_quotes, unique_lexeme;").Error
 	if err != nil {
@@ -117,6 +116,36 @@ func (connection *Connection) WrapItUp() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	fmt.Println("Running final queries / Creating indexes ...")
+
+	wrapUpFile := ReadTextFile("./sql/views/queries.sql")
+	scanner := bufio.NewScanner(strings.NewReader(wrapUpFile))
+
+	for scanner.Scan() {
+		query := scanner.Text()
+		if query == "" {
+			continue
+		}
+		wg.Add(1)
+		go func(query string) {
+			log.Println("Running: ", query)
+			defer wg.Done()
+			err = connection.DB.Exec(query).Error
+			if err != nil {
+				log.Printf("Reading JSON file Failed, %s", err)
+			}
+			log.Println("Done With: ", query)
+		}(query)
+	}
+
+	wg.Wait()
+}
+
+func (connection *Connection) CreateIndexes() {
+	var wg sync.WaitGroup
+
+	var err error
 
 	fmt.Println("Running final queries / Creating indexes ...")
 
@@ -331,11 +360,9 @@ func (connection *Connection) InsertAuthorsForLetter(isIcelandic bool, letter st
 				BirthYear:   authorJSON.Metadata.Days.Birth.Year,
 				BirthMonth:  authorJSON.Metadata.Days.Birth.Month,
 				BirthDate:   authorJSON.Metadata.Days.Birth.Day,
-				BirthDay:    birthDay.UTC(),
 				DeathYear:   authorJSON.Metadata.Days.Death.Year,
 				DeathMonth:  authorJSON.Metadata.Days.Death.Month,
 				DeathDate:   authorJSON.Metadata.Days.Death.Day,
-				DeathDay:    deathDay.UTC(),
 			})
 		}
 		author.Quotes = quotes

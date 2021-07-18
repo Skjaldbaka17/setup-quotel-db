@@ -26,32 +26,63 @@ func readResponse(command string) string {
 
 func main() {
 
-	resp := readResponse("This will delete all data in the current DB. Sure you want to start the setup? (y/n)")
+	deleteTablesResp := readResponse("Delete tables? (y/n)")
+	insertEnglishAuthorsResp := readResponse("Insert englishAuthors? (y/n)")
+	insertIcelandicAuthorsResp := readResponse("Insert icelandicAuthors? (y/n)")
+	createIndexesResp := readResponse("Run create indexes Queries? (y/n)")
+	insertEnglishTopicsResp := readResponse("Insert englishTopics? (y/n)")
+	insertIcelandicTopicsResp := readResponse("Insert icelandicTopics? (y/n)")
+	createMatViewsResp := readResponse("Run create materialized views Queries? (y/n)")
 
-	if strings.ToLower(resp) != string('y') {
-		log.Println("You have decided not to setup db...")
-		return
+	var connection *db.Connection
+	var err error
+	if strings.ToLower(deleteTablesResp) == "y" {
+		log.Println("Deleting tables...")
+		connection, err = db.InitializeDBConnection(true)
+	} else {
+		log.Println("NOT Deleting tables...")
+		connection, err = db.InitializeDBConnection(false)
 	}
 
-	connection, err := db.InitializeDBConnection()
 	if err != nil {
 		log.Fatalf("got error %s", err)
 	}
-	log.Println("START INSERTING ENGLISH AUTHORS")
-	connection.InsertAuthors("english")
-	log.Println("DONE WITH INSERTING ENGLISH AUTHORS")
-	log.Println("START INSERTING ICELANDIC AUTHORS")
-	connection.InsertAuthors("icelandic")
-	log.Println("DONE WITH INSERTING ICELANDIC AUTHORS")
-	log.Println("START WRAPPING IT UP")
-	connection.WrapItUp() //If this is done first then the rest is much quicker because the quotes.quote column has been indexed!
-	log.Println("DONE WRAPPING IT UP")
-	log.Println("START INSERTING ENGLISH TOPICS")
-	connection.InsertTopics("English")
-	log.Println("DONE INSERTING ENGLISH TOPICS")
-	log.Println("START INSERTING ENGLISH TOPICS")
-	connection.InsertTopics("Icelandic")
-	log.Println("DONE INSERTING ICELANDIC TOPICS")
+
+	if strings.ToLower(insertEnglishAuthorsResp) == "y" {
+		log.Println("START INSERTING ENGLISH AUTHORS")
+		connection.InsertAuthors("english")
+		log.Println("DONE WITH INSERTING ENGLISH AUTHORS")
+	}
+
+	if strings.ToLower(insertIcelandicAuthorsResp) == "y" {
+		log.Println("START INSERTING ICELANDIC AUTHORS")
+		connection.InsertAuthors("icelandic")
+		log.Println("DONE WITH INSERTING ICELANDIC AUTHORS")
+	}
+
+	if strings.ToLower(createIndexesResp) == "y" {
+		log.Println("START CREATING INDEXES")
+		connection.CreateIndexes() //If this is done first then the rest is much quicker because the quotes.quote column has been indexed!
+		log.Println("DONE CREATING INDEXES")
+	}
+
+	if strings.ToLower(insertEnglishTopicsResp) == "y" {
+		log.Println("START INSERTING ENGLISH TOPICS")
+		connection.InsertTopics("English")
+		log.Println("DONE INSERTING ENGLISH TOPICS")
+	}
+
+	if strings.ToLower(insertIcelandicTopicsResp) == "y" {
+		log.Println("START INSERTING ENGLISH TOPICS")
+		connection.InsertTopics("Icelandic")
+		log.Println("DONE INSERTING ICELANDIC TOPICS")
+	}
+
+	if strings.ToLower(createMatViewsResp) == "y" {
+		log.Println("START CREATING INDEXES")
+		connection.CreateMaterializedViews() //If this is done first then the rest is much quicker because the quotes.quote column has been indexed!
+		log.Println("DONE CREATING INDEXES")
+	}
 
 	var author db.Author
 	var count int64

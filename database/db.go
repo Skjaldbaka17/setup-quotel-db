@@ -15,7 +15,7 @@ type Connection struct {
 	DB   *gorm.DB
 }
 
-func InitializeDBConnection() (*Connection, error) {
+func InitializeDBConnection(cleanUp bool) (*Connection, error) {
 	godotenv.Load()
 	db, err := gorm.Open(postgres.Open(os.Getenv("DATABASE_URL")), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Error),
@@ -26,7 +26,10 @@ func InitializeDBConnection() (*Connection, error) {
 	connection := &Connection{
 		DB: db,
 	}
-	connection.GetShitReady()
+	if cleanUp {
+		connection.GetShitReady()
+	}
+
 	// Auto Migrate
 	err = db.AutoMigrate(&Author{}, &Aod{}, &Aodice{}, &Quote{}, &Qod{}, &Qodice{}, &Topic{})
 	if err != nil {

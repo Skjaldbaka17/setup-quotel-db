@@ -42,7 +42,7 @@ type Aod struct {
 	DeathDate   int
 	DeathDay    time.Time
 	Name        string
-	Date        time.Time `gorm:"unique"`
+	Date        string `gorm:"type:date;unique"`
 	AuthorID    uint
 }
 
@@ -59,7 +59,7 @@ type Aodice struct {
 	DeathDate   int
 	DeathDay    time.Time
 	Name        string
-	Date        time.Time `gorm:"unique"`
+	Date        string `gorm:"type:date;unique"`
 	AuthorID    uint
 }
 
@@ -79,18 +79,16 @@ type Quote struct {
 	BirthYear   int
 	BirthMonth  string
 	BirthDate   int
-	BirthDay    time.Time
 	DeathYear   int
 	DeathMonth  string
 	DeathDate   int
-	DeathDay    time.Time
 }
 
 type Qod struct {
 	gorm.Model
 	AuthorID uint
 	Quote    string //indexed for when inserting the the topics!
-	Count    int    `gorm:"default 0"`
+	QuoteId  uint
 
 	Name        string
 	Nationality string
@@ -98,19 +96,17 @@ type Qod struct {
 	BirthYear   int
 	BirthMonth  string
 	BirthDate   int
-	BirthDay    time.Time
 	DeathYear   int
 	DeathMonth  string
 	DeathDate   int
-	DeathDay    time.Time
-	Date        time.Time `gorm:"unique"`
+	Date        string `gorm:"type:date;unique"`
 }
 
 type Qodice struct {
 	gorm.Model
 	AuthorID uint
 	Quote    string //indexed for when inserting the the topics!
-	Count    int    `gorm:"default 0"`
+	QuoteId  uint
 
 	Name        string
 	Nationality string
@@ -123,7 +119,7 @@ type Qodice struct {
 	DeathMonth  string
 	DeathDate   int
 	DeathDay    time.Time
-	Date        time.Time `gorm:"unique"`
+	Date        string `gorm:"type:date;unique"`
 }
 
 type Topic struct {
