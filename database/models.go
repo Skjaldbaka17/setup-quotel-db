@@ -26,7 +26,6 @@ type Author struct {
 	NrOfEnglishQuotes   int
 	NrOfIcelandicQuotes int
 	Aods                []Aod
-	Aodices             []Aodice
 }
 
 type Aod struct {
@@ -42,25 +41,9 @@ type Aod struct {
 	DeathDate   int
 	DeathDay    time.Time
 	Name        string
-	Date        string `gorm:"type:date;unique"`
+	Date        string `gorm:"type:date"`
 	AuthorID    uint
-}
-
-type Aodice struct {
-	gorm.Model
-	Nationality string
-	Profession  string
-	BirthYear   int
-	BirthMonth  string
-	BirthDate   int
-	BirthDay    time.Time
-	DeathYear   int
-	DeathMonth  string
-	DeathDate   int
-	DeathDay    time.Time
-	Name        string
-	Date        string `gorm:"type:date;unique"`
-	AuthorID    uint
+	IsIcelandic bool
 }
 
 type Quote struct {
@@ -70,6 +53,7 @@ type Quote struct {
 	Count       int    `gorm:"default 0"`
 	IsIcelandic bool
 	QuoteTSV    string  `gorm:"type:tsvector"`
+	NameTSV     string  `gorm:"type:tsvector"`
 	TSV         string  `gorm:"type:tsvector"`
 	Topics      []Topic `gorm:"many2many:topics_quotes;"`
 
@@ -82,6 +66,7 @@ type Quote struct {
 	DeathYear   int
 	DeathMonth  string
 	DeathDate   int
+	Qods        []Qod
 }
 
 type Qod struct {
@@ -99,27 +84,10 @@ type Qod struct {
 	DeathYear   int
 	DeathMonth  string
 	DeathDate   int
-	Date        string `gorm:"type:date;unique"`
-}
-
-type Qodice struct {
-	gorm.Model
-	AuthorID uint
-	Quote    string //indexed for when inserting the the topics!
-	QuoteId  uint
-
-	Name        string
-	Nationality string
-	Profession  string
-	BirthYear   int
-	BirthMonth  string
-	BirthDate   int
-	BirthDay    time.Time
-	DeathYear   int
-	DeathMonth  string
-	DeathDate   int
-	DeathDay    time.Time
-	Date        string `gorm:"type:date;unique"`
+	Date        string `gorm:"type:date"`
+	IsIcelandic bool
+	TopicId     uint
+	TopicName   string
 }
 
 type Topic struct {

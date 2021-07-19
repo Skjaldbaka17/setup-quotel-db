@@ -31,7 +31,7 @@ func InitializeDBConnection(cleanUp bool) (*Connection, error) {
 	}
 
 	// Auto Migrate
-	err = db.AutoMigrate(&Author{}, &Aod{}, &Aodice{}, &Quote{}, &Qod{}, &Qodice{}, &Topic{})
+	err = db.AutoMigrate(&Author{}, &Aod{}, &Quote{}, &Qod{}, &Topic{})
 	if err != nil {
 		log.Fatalf("ERROR: %s", err)
 	}
