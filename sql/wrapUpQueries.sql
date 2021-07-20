@@ -22,6 +22,8 @@ CREATE INDEX if not exists index_authors_on_birth_day ON authors(birth_day);
 
 CREATE INDEX if not exists index_aods_on_date ON aods(date);
 
+-- UPDATE quotes SET icelandic_id = is_icelandic::int*id;
+-- CREATE INDEX if not exists index_quotes_on_icelandic_id ON quotes(icelandic_id);
 CREATE INDEX if not exists index_quotes_on_name_tsv ON quotes USING gin(name_tsv);
 CREATE INDEX if not exists index_quotes_on_tsv ON quotes USING gin(tsv);
 CREATE INDEX if not exists index_quotes_on_quote_tsv ON quotes USING gin(quote_tsv);
@@ -30,6 +32,8 @@ CREATE INDEX if not exists index_quotes_on_author_id ON quotes(author_id);
 CREATE INDEX if not exists index_quotes_on_count ON quotes(count);
 
 CREATE INDEX if not exists index_qods_on_date ON qods(date);
+
+
 
 
 

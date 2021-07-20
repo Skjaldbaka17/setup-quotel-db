@@ -67,6 +67,7 @@ type Quote struct {
 	DeathMonth  string
 	DeathDate   int
 	Qods        []Qod
+	// IcelandicId int //Only for optimizing when sql-query wants only icelandic etc (because we can index this column)
 }
 
 type Qod struct {
