@@ -66,8 +66,8 @@ type Quote struct {
 	DeathYear   int
 	DeathMonth  string
 	DeathDate   int
+	QuoteLength int //The length of the quote in nr of words
 	Qods        []Qod
-	// IcelandicId int //Only for optimizing when sql-query wants only icelandic etc (because we can index this column)
 }
 
 type Qod struct {
