@@ -18,7 +18,7 @@ Run the following to get the quotel data
     git clone https://github.com/Skjaldbaka17/Quotel-Data-JSON ../Quotel-Data-JSON
 ```
 
-Then to create the Postgres DB run:
+Then to create the Postgres DB create a `.env` file with `DATABASE_URL=YOUR_DB_URL` and then run:
 
 ```bash
     go mod tidy
